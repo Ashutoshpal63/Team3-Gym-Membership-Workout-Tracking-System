@@ -22,7 +22,7 @@ export function MemberProfile() {
 
   useEffect(() => {
     fetchProfile();
-  }, []);
+  }, [user]);
 
   const fetchProfile = async () => {
     try {
@@ -37,7 +37,7 @@ export function MemberProfile() {
         setMemberInfo({
           name: user?.name || '',
           email: user?.email || '',
-          phone: user?.phone || '',
+          phone: user?.phone || 'N/A',
           joinDate: membership?.startDate ? new Date(membership.startDate).toLocaleDateString() : 'N/A',
           membershipType: membership?.plan || 'N/A',
           membershipStatus: membership?.status || 'expired',
@@ -70,6 +70,16 @@ export function MemberProfile() {
     );
   }
 
+  const initials = (memberInfo.name || '')
+    .split(' ')
+    .filter(Boolean)
+    .map(n => n[0])
+    .join('') || 'U';
+
+  const statusLabel = memberInfo.membershipStatus
+    ? memberInfo.membershipStatus.charAt(0).toUpperCase() + memberInfo.membershipStatus.slice(1)
+    : 'N/A';
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -81,7 +91,7 @@ export function MemberProfile() {
       {/* Profile Picture & Name */}
       <div className="bg-white rounded-2xl p-6 shadow-md text-center">
         <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white text-3xl mx-auto mb-4">
-          {memberInfo.name.split(' ').map(n => n[0]).join('') || 'U'}
+          {initials}
         </div>
         <h2 className="mb-1">{memberInfo.name || 'Member'}</h2>
         <p className="text-gray-600">Member since {memberInfo.joinDate}</p>
@@ -133,7 +143,7 @@ export function MemberProfile() {
                 ? 'bg-green-100 text-green-700' 
                 : 'bg-red-100 text-red-700'
             }`}>
-              {memberInfo.membershipStatus.charAt(0).toUpperCase() + memberInfo.membershipStatus.slice(1)}
+              {statusLabel}
             </span>
           </div>
           <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
