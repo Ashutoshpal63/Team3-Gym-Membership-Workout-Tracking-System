@@ -37,7 +37,7 @@ export function MemberProfile() {
         setMemberInfo({
           name: user?.name || '',
           email: user?.email || '',
-          phone: user?.phone || 'N/A',
+          phone: 'N/A',
           joinDate: membership?.startDate ? new Date(membership.startDate).toLocaleDateString() : 'N/A',
           membershipType: membership?.plan || 'N/A',
           membershipStatus: membership?.status || 'expired',
