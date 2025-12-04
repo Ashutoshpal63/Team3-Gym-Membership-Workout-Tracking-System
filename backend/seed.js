@@ -40,8 +40,8 @@ const seedUsers = async () => {
         console.log('Users seeded successfully');
         process.exit();
     } catch (err) {
-        console.error(err);
-        process.exit(1);
+        console.error(err) ;
+        process.exit(1) ;
     }
 };
 
