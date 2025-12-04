@@ -41,12 +41,7 @@ export function AdminHome() {
     { time: '8PM', count: 24 }
   ]);
   const [expiringMembers, setExpiringMembers] = useState<any[]>([]);
-  const [recentActivities] = useState([
-    { id: 1, type: 'new_member', message: 'Alex Morgan joined with Premium Annual plan', time: '2 hours ago' },
-    { id: 2, type: 'renewal', message: 'David Chen renewed Monthly membership', time: '3 hours ago' },
-    { id: 3, type: 'payment', message: 'Payment received from Lisa Johnson - $99', time: '5 hours ago' },
-    { id: 4, type: 'check_in', message: `${stats.todayCheckIns} members checked in today`, time: '6 hours ago' }
-  ]);
+  const [recentActivities, setRecentActivities] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -58,6 +53,32 @@ export function AdminHome() {
 
         if (dashboardStats.data?.stats) {
           setStats(dashboardStats.data.stats);
+          // populate revenueData if provided by API (expected as array of { day, revenue } or similar)
+          const apiRevenue = dashboardStats.data.revenue || dashboardStats.data.weeklyRevenue || dashboardStats.data.revenueByDay;
+          if (Array.isArray(apiRevenue) && apiRevenue.length > 0) {
+            // try to map common shapes to our expected { day, revenue }
+            const mapped = apiRevenue.map((r: any) => {
+              if (typeof r === 'object') {
+                if (r.day && (r.revenue !== undefined)) return { day: r.day, revenue: r.revenue };
+                if (r.label && (r.value !== undefined)) return { day: r.label, revenue: r.value };
+              }
+              return null;
+            }).filter(Boolean);
+            if (mapped.length) setRevenueData(mapped as any);
+          }
+
+          // populate recent activities from API if present, otherwise derive a few items from stats
+          if (Array.isArray(dashboardStats.data.recentActivities) && dashboardStats.data.recentActivities.length > 0) {
+            setRecentActivities(dashboardStats.data.recentActivities);
+          } else {
+            const s = dashboardStats.data.stats;
+            setRecentActivities([
+              { id: 1, type: 'new_member', message: 'New members joined today', time: 'Today' },
+              { id: 2, type: 'renewal', message: `${s?.activeMembers ?? stats.activeMembers} active members`, time: 'Today' },
+              { id: 3, type: 'payment', message: `Today's revenue: $${s?.todayRevenue ?? stats.todayRevenue}`, time: 'Today' },
+              { id: 4, type: 'check_in', message: `${s?.todayCheckIns ?? stats.todayCheckIns} members checked in today`, time: 'Today' }
+            ]);
+          }
         }
 
         if (membersResponse.data?.members) {
