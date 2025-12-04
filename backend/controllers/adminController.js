@@ -21,20 +21,20 @@ exports.addEquipment = async (req, res) => {
 
 exports.getEquipment = async (req, res) => {
     try {
-        const equipment = await Equipment.find();
+        const equipment = await Equipment.find() ;
         res.json(equipment);
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('Server Error');
+        res.status(500).send('Server Error ')
     }
 };
 
 exports.getUsers = async (req, res) => {
     try {
-        const users = await User.find().select('-password');
+        const users = await User.find().select('-password') ;
         res.json(users);
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('Server Error');
+        res.status(500).send('Server Error') ;
     }
 };
