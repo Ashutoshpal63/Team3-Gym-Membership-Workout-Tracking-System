@@ -3,92 +3,79 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
+const generateToken = (userId) => {
+    const payload = { user: { id: userId } };
+    return jwt.sign(payload, process.env.JWT_SECRET || 'secret', { expiresIn: 360000 });
+};
+
+// ------------------ REGISTER ------------------
 exports.register = async (req, res) => {
-    const { name, email, password, role } = req.body;
-
     try {
-        let user = await User.findOne({ email });
-        if (user) {
-            return res.status(400).json({ msg: 'User already exists' });
-        }
+        const { name, email, password, role } = req.body;
 
-        user = new User({
+        // Check existing user
+        const existingUser = await User.findOne({ email });
+        if (existingUser) return res.status(400).json({ msg: 'User already exists' });
+
+        // Create new user object
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        const newUser = await User.create({
             name,
             email,
-            password,
+            password: hashedPassword,
             role
         });
 
-        const salt = await bcrypt.genSalt(10);
-        user.password = await bcrypt.hash(password, salt);
+        // Generate token
+        const token = generateToken(newUser.id);
 
-        await user.save();
-
-        const payload = {
-            user: {
-                id: user.id
-            }
-        };
-
-        jwt.sign(
-            payload,
-            process.env.JWT_SECRET || 'secret',
-            { expiresIn: 360000 },
-            (err, token) => {
-                if (err) throw err;
-                // return token and user info so frontend can store role/name
-                res.json({ token, role: user.role, name: user.name });
-            }
-        );
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server error') ;
+        return res.json({ token, role: newUser.role, name: newUser.name });
+        
+    } catch (error) {
+        console.error(error.message);
+        return res.status(500).send('Server error');
     }
 };
 
+// ------------------ LOGIN ------------------
 exports.login = async (req, res) => {
-    const { email, password } = req.body;
-
     try {
-        let user = await User.findOne({ email }) ;
-        if (!user) {
-            return res.status(400).json({ msg: 'Invalid Credentials' }) ;
-        }
+        const { email, password } = req.body;
 
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            return res.status(400).json({ msg: 'Invalid Credentials' });
-        }
+        const user = await User.findOne({ email });
+        if (!user) return res.status(400).json({ msg: 'Invalid Credentials' });
 
-        const payload = {
-            user: {
-                id: user.id
-            }
-        };
+        const validPassword = await bcrypt.compare(password, user.password);
+        if (!validPassword) return res.status(400).json({ msg: 'Invalid Credentials' });
 
-        jwt.sign(
-            payload,
-            process.env.JWT_SECRET || 'secret',
-            { expiresIn: 360000 },
-            (err, token) => {
-                if (err) throw err;
-                res.json({ token, role: user.role, name: user.name });
-            }
-        );
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server error');
+        const token = generateToken(user.id);
+
+        return res.json({ token, role: user.role, name: user.name });
+
+    } catch (error) {
+        console.error(error.message);
+        return res.status(500).send('Server error');
     }
 };
 
-// GET current user
+// ------------------ GET CURRENT USER ------------------
 exports.getCurrentUser = async (req, res) => {
     try {
         const user = await User.findById(req.user.id).select('-password');
+        
         if (!user) return res.status(404).json({ msg: 'User not found' });
-        res.json({ id: user._id, name: user.name, email: user.email, role: user.role });
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server error');
+
+        return res.json({
+            id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role
+        });
+
+    } catch (error) {
+        console.error(error.message);
+        return res.status(500).send('Server error');
     }
 };
