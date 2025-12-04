@@ -35,4 +35,10 @@ function AppContent() {
   return <LandingPage onRoleSelect={() => setShowLogin(true)} showLogin={showLogin} onCloseLogin={() => setShowLogin(false)} />;
 }
 
-
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
+  );
+}
