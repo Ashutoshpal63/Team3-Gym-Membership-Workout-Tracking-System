@@ -52,7 +52,8 @@ export function LandingPage({ onRoleSelect, showLogin, onCloseLogin }: LandingPa
 
   const handleRoleClick = (role: UserRole) => {
     setSelectedRole(role);
-    setShowLogin?.(true);
+    // Inform parent of the selected role so it can open the login modal
+    onRoleSelect(role);
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -134,7 +135,7 @@ export function LandingPage({ onRoleSelect, showLogin, onCloseLogin }: LandingPa
           <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl">{isSignup ? 'Sign Up' : 'Login'} as {selectedRole}</h2>
+                <h2 className="text-2xl">{isSignup ? 'Sign Up' : 'Login'} as {selectedRole ?? 'Member'}</h2>
                 <button
                   onClick={() => {
                     onCloseLogin?.();
