@@ -1,29 +1,36 @@
 const Subscription = require('../models/Subscription');
 
+// ------------------ CREATE SUBSCRIPTION ------------------
 exports.createSubscription = async (req, res) => {
-    const { plan, endDate } = req.body;
-
     try {
-        const newSubscription = new Subscription({
+        const { plan, endDate } = req.body;
+
+        const subscriptionData = {
             user: req.user.id,
             plan,
             endDate
-        });
+        };
 
-        const subscription = await newSubscription.save();
-        res.json(subscription);
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server Error');
+        const createdSubscription = await Subscription.create(subscriptionData);
+
+        return res.json(createdSubscription);
+
+    } catch (error) {
+        console.error(error.message);
+        return res.status(500).send('Server Error');
     }
 };
 
+// ------------------ GET USER SUBSCRIPTIONS ------------------
 exports.getSubscriptions = async (req, res) => {
     try {
-        const subscriptions = await Subscription.find({ user: req.user.id });
-        res.json(subscriptions);
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server Error');
+        const userId = req.user.id;
+        const userSubscriptions = await Subscription.find({ user: userId });
+
+        return res.json(userSubscriptions);
+
+    } catch (error) {
+        console.error(error.message);
+        return res.status(500).send('Server Error');
     }
 };
